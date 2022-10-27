@@ -1,0 +1,152 @@
+openapi: 3.0.0
+info:
+  title: Gas & Water Usage Monitoring Application
+  description: Provides API to store and retrun user's measurements
+  version: 0.1.9
+
+paths:
+  /user/{login}/measurements:
+    get:
+      operationId: getMeasurements
+      summary: Returns page of user's measuremets
+      parameters:
+        - in: path
+          name: login
+          required: true
+          schema:
+            type: string
+          description: User login
+        - in: query
+          name: offset
+          required: true
+          schema:
+            type: integer
+          description: Page number
+        - in: query
+          name: size
+          required: true
+          schema:
+            type: integer
+          description: Page size
+      responses:
+        '200':
+          description: Array of user's measurements, sorted by date saved, paged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeasurementPage'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /user/{login}/measurement:
+    post:
+      summary: Save user measurement. User will be created if not exists. Current date/time will be set as measurement date saved
+      operationId: saveMeasurement
+      parameters:
+        - in: path
+          name: login
+          required: true
+          schema:
+            type: string
+          description: User login
+      requestBody:
+        description: Measurement to save
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementDto'
+      responses:
+        '200':
+          description: Measurement saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeasurementDto'
+        '400':
+          description: Measurement data is not valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    ConsumptionType:
+      type: string
+      enum:
+        - GAS
+        - HOT_WATER
+        - COLD_WATER
+    Consumptions:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          $ref: '#/components/schemas/ConsumptionType'
+          description: Consumption type
+        value:
+          type: number
+          description: Consumption value
+
+    MeasurementDto:
+      type: object
+      required:
+        - consumptions
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Measurement record ID (not used in POST requests)
+        userLogin:
+          type: string
+          readOnly: true
+          description: User login (not used in POST requests)
+        dateSaved:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Saved date/time (not used in POST requests)
+        consumptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Consumptions'
+
+    MeasurementPage:
+      type: object
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+          description: Number of total measurements of user
+        totalPages:
+          type: integer
+          description: Number of pages could be returned
+        pageContent:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeasurementDto'
+    Error:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+          description: Error message

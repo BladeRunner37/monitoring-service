@@ -1,0 +1,9 @@
+.gradle
+gradle/
+.idea
+logs/
+/build/
+**/build/
+input
+output
+/target

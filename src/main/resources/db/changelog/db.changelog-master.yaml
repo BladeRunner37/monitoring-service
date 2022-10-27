@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: migrations/init.sql
+  - include:
+      file: migrations/indices.sql
